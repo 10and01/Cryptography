@@ -1,0 +1,2334 @@
+<!DOCTYPE html>
+<html lang='zh-CN'>
+<head>
+  <meta charset='UTF-8' />
+  <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+  <title>DES Web 滚动可视化</title>
+  <style>
+  :root {
+    --bg1:#082f49;
+    --bg2:#0f766e;
+    --bg3:#f97316;
+    --card:rgba(255,255,255,.94);
+    --text:#111827;
+    --muted:#334155;
+    --line:#cbd5e1;
+    --mod:#e2e8f0;
+    --active:#f97316;
+  }
+  * { box-sizing: border-box; }
+  html,body { height:100%; margin:0; }
+  body {
+    overflow:hidden;
+    font-family:"Trebuchet MS","Microsoft YaHei",sans-serif;
+    color:var(--text);
+    background:
+    radial-gradient(circle at 18% 18%, color-mix(in srgb, var(--bg3) 65%, white 35%) 0%, transparent 28%),
+    linear-gradient(130deg, var(--bg1), var(--bg2));
+  }
+  .deck { height:100vh; overflow-y:auto; scroll-snap-type:y mandatory; scroll-behavior:smooth; }
+  .slide { min-height:100vh; scroll-snap-align:start; display:flex; align-items:center; justify-content:center; padding:24px; }
+  .card { width:min(1140px,96vw); background:var(--card); border:1px solid var(--line); border-radius:20px; padding:20px; box-shadow:0 20px 60px rgba(0,0,0,.26); }
+  h2 { margin:0 0 6px; font-size:clamp(24px,3.2vw,42px); }
+  .slide-subtitle { margin:0 0 14px; color:var(--muted); }
+  .framework { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; margin-bottom:12px; }
+  .module { background:var(--mod); border:1px solid var(--line); border-radius:10px; padding:8px; font-size:12px; text-align:center; font-weight:700; }
+  .module.active { background:var(--active); color:#fff; border-color:#ea580c; }
+  .kv { margin:8px 0; background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:9px 11px; }
+  .kv span { display:block; font-size:12px; color:#9a3412; font-weight:700; margin-bottom:5px; }
+  .kv code { display:block; white-space:pre-wrap; word-break:break-all; font-family:"Cascadia Code","Consolas",monospace; font-size:12px; line-height:1.45; }
+  .f-diagram { display:flex; align-items:center; flex-wrap:wrap; gap:6px; margin:8px 0 10px; }
+  .f-box { background:#dbeafe; border:1px solid #93c5fd; border-radius:8px; padding:6px 8px; font-size:12px; font-weight:700; }
+  .f-arrow { color:#2563eb; font-weight:900; }
+  .hud { position:fixed; top:12px; right:12px; z-index:5; color:#fff; background:rgba(15,23,42,.55); border:1px solid rgba(255,255,255,.28); border-radius:999px; padding:5px 12px; font-size:12px; }
+  .hint { position:fixed; left:12px; bottom:12px; z-index:5; color:#e2e8f0; background:rgba(15,23,42,.55); border:1px solid rgba(255,255,255,.28); border-radius:999px; padding:5px 10px; font-size:12px; }
+  @media (max-width: 900px) {
+    .framework { grid-template-columns:repeat(2,1fr); }
+    .card { padding:14px; }
+  }
+  </style>
+</head>
+<body>
+  <div class='hud' id='counter'>1 / 110</div>
+  <div class='hint'>滚轮/方向键/PageDown/PageUp 切页</div>
+  <main class='deck' id='deck'>
+    <section class='slide'>
+      <div class='card'>
+      <h2>DES Web 可视化演示</h2>
+      <p class='slide-subtitle'>仅保留浏览器滚动演示，向下滚动像 PPT 一样播放</p>
+      <div class='framework'><div class='module active'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      <div class='kv'><span>密钥</span><code>&#x27;MySecret&#x27;</code></div><div class='kv'><span>原始明文</span><code>&#x27;19230323wentaowang&#x27;</code></div><div class='kv'><span>填充后明文</span><code>&#x27;19230323wentaowang\x06\x06\x06\x06\x06\x06&#x27;</code></div><div class='kv'><span>最终密文(HEX)</span><code>A0E1805ED6FBEB2329ABB122C4BF46DD6DAEC5DEE9C1966E</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密块 1 - IP 阶段</h2>
+      <p class='slide-subtitle'>本页对应模块：初始置换 IP</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module active'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      <div class='kv'><span>输入块(HEX)</span><code>3139323330333233</code></div><div class='kv'><span>输入块(BIN)</span><code>00110001 00111001 00110010 00110011 00110000 00110011 00110010 00110011</code></div><div class='kv'><span>IP 后 L0</span><code>00000000 11111111 00000000 10101011</code></div><div class='kv'><span>IP 后 R0</span><code>00000000 11111111 00000010 11101100</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 1 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K1）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K1</span><code>F096E633A04C</code></div><div class='kv'><span>L0</span><code>00000000 11111111 00000000 10101011</code></div><div class='kv'><span>R0</span><code>00000000 11111111 00000010 11101100</code></div><div class='kv'><span>E 扩展输出</span><code>000000 000001 011111 111110 100000 000101 011101 011000</code></div><div class='kv'><span>XOR 输出</span><code>111100 001000 000100 011000 101100 111111 011100 010100</code></div><div class='kv'><span>S 盒输出</span><code>0101 0110 1001 1011 0111 1101 0110 0011</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11110100 01010110 10101101 11011010</code></div><div class='kv'><span>L1</span><code>00000000 11111111 00000010 11101100</code></div><div class='kv'><span>R1</span><code>11110100 10101001 10101101 01110001</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 2 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K2）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K2</span><code>E0BE7242065F</code></div><div class='kv'><span>L1</span><code>00000000 11111111 00000010 11101100</code></div><div class='kv'><span>R1</span><code>11110100 10101001 10101101 01110001</code></div><div class='kv'><span>E 扩展输出</span><code>111110 101001 010101 010011 110101 011010 101110 100011</code></div><div class='kv'><span>XOR 输出</span><code>000110 100010 101100 100001 100101 111010 110111 111100</code></div><div class='kv'><span>S 盒输出</span><code>0001 1110 0011 0011 1100 1101 1111 0101</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11010111 01011100 00101100 00111111</code></div><div class='kv'><span>L2</span><code>11110100 10101001 10101101 01110001</code></div><div class='kv'><span>R2</span><code>11010111 10100011 00101110 11010011</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 3 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K3）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K3</span><code>E4FE721FB188</code></div><div class='kv'><span>L2</span><code>11110100 10101001 10101101 01110001</code></div><div class='kv'><span>R2</span><code>11010111 10100011 00101110 11010011</code></div><div class='kv'><span>E 扩展输出</span><code>111010 101111 110100 000110 100101 011101 011010 100111</code></div><div class='kv'><span>XOR 输出</span><code>000011 100000 001101 110100 100010 100110 011100 101111</code></div><div class='kv'><span>S 盒输出</span><code>1111 0000 0110 0011 0010 0101 0110 1101</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10001000 11010001 10101110 10101110</code></div><div class='kv'><span>L3</span><code>11010111 10100011 00101110 11010011</code></div><div class='kv'><span>R3</span><code>01111100 01111000 00000011 11011111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 4 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K4）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K4</span><code>E6F752205561</code></div><div class='kv'><span>L3</span><code>11010111 10100011 00101110 11010011</code></div><div class='kv'><span>R3</span><code>01111100 01111000 00000011 11011111</code></div><div class='kv'><span>E 扩展输出</span><code>101111 111000 001111 110000 000000 000111 111011 111110</code></div><div class='kv'><span>XOR 输出</span><code>010110 010111 010010 100010 001000 000010 101110 011111</code></div><div class='kv'><span>S 盒输出</span><code>1100 1010 1101 0110 0111 0001 1110 0010</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01100100 11011111 10110101 10000001</code></div><div class='kv'><span>L4</span><code>01111100 01111000 00000011 11011111</code></div><div class='kv'><span>R4</span><code>10110011 01111100 10011011 01010010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 5 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K5）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K5</span><code>6ED7534AA826</code></div><div class='kv'><span>L4</span><code>01111100 01111000 00000011 11011111</code></div><div class='kv'><span>R4</span><code>10110011 01111100 10011011 01010010</code></div><div class='kv'><span>E 扩展输出</span><code>010110 100110 101111 111001 010011 110110 101010 100101</code></div><div class='kv'><span>XOR 输出</span><code>001101 001011 110010 101010 000001 011100 001010 000011</code></div><div class='kv'><span>S 盒输出</span><code>1101 0010 0001 1011 1110 0101 0000 1111</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11001101 11000110 10101000 11101010</code></div><div class='kv'><span>L5</span><code>10110011 01111100 10011011 01010010</code></div><div class='kv'><span>R5</span><code>10110001 10111110 10101011 00110101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 6 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K6）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K6</span><code>6FD15BE44D98</code></div><div class='kv'><span>L5</span><code>10110011 01111100 10011011 01010010</code></div><div class='kv'><span>R5</span><code>10110001 10111110 10101011 00110101</code></div><div class='kv'><span>E 扩展输出</span><code>110110 100011 110111 111101 010101 010110 100110 101011</code></div><div class='kv'><span>XOR 输出</span><code>101101 011110 110010 100110 101100 010010 010000 110011</code></div><div class='kv'><span>S 盒输出</span><code>0001 1010 0001 0000 0111 1101 0011 1100</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01111110 00001100 00100100 10101010</code></div><div class='kv'><span>L6</span><code>10110001 10111110 10101011 00110101</code></div><div class='kv'><span>R6</span><code>11001101 01110000 10111111 11111000</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 7 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K7）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K7</span><code>2FC1DB09125B</code></div><div class='kv'><span>L6</span><code>10110001 10111110 10101011 00110101</code></div><div class='kv'><span>R6</span><code>11001101 01110000 10111111 11111000</code></div><div class='kv'><span>E 扩展输出</span><code>011001 011010 101110 100001 010111 111111 111111 110001</code></div><div class='kv'><span>XOR 输出</span><code>010010 100110 101001 111010 010101 101110 110110 101010</code></div><div class='kv'><span>S 盒输出</span><code>1010 1011 0110 0010 1111 0011 1000 1100</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01101001 11101101 01100010 10100101</code></div><div class='kv'><span>L7</span><code>11001101 01110000 10111111 11111000</code></div><div class='kv'><span>R7</span><code>11011000 01010011 11001001 10010000</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 8 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K8）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K8</span><code>3F499BD7D020</code></div><div class='kv'><span>L7</span><code>11001101 01110000 10111111 11111000</code></div><div class='kv'><span>R7</span><code>11011000 01010011 11001001 10010000</code></div><div class='kv'><span>E 扩展输出</span><code>011011 110000 001010 100111 111001 010011 110010 100001</code></div><div class='kv'><span>XOR 输出</span><code>010100 000100 101100 111100 001100 101110 110010 000001</code></div><div class='kv'><span>S 盒输出</span><code>0110 1000 0011 1000 1011 0011 1111 0001</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>00100111 00111000 10101110 11000101</code></div><div class='kv'><span>L8</span><code>11011000 01010011 11001001 10010000</code></div><div class='kv'><span>R8</span><code>11101010 01001000 00010001 00111101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 9 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K9）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K9</span><code>1F5BC919CA0E</code></div><div class='kv'><span>L8</span><code>11011000 01010011 11001001 10010000</code></div><div class='kv'><span>R8</span><code>11101010 01001000 00010001 00111101</code></div><div class='kv'><span>E 扩展输出</span><code>111101 010100 001001 010000 000010 100010 100111 111011</code></div><div class='kv'><span>XOR 输出</span><code>111010 100001 100110 011001 000100 111110 001111 110101</code></div><div class='kv'><span>S 盒输出</span><code>1010 1101 1001 0001 0100 0110 1010 1001</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10001100 10101100 01001111 00011001</code></div><div class='kv'><span>L9</span><code>11101010 01001000 00010001 00111101</code></div><div class='kv'><span>R9</span><code>01010100 11111111 10000110 10001001</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 10 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K10）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K10</span><code>1B79CD545490</code></div><div class='kv'><span>L9</span><code>11101010 01001000 00010001 00111101</code></div><div class='kv'><span>R9</span><code>01010100 11111111 10000110 10001001</code></div><div class='kv'><span>E 扩展输出</span><code>101010 101001 011111 111111 110000 001101 010001 010010</code></div><div class='kv'><span>XOR 输出</span><code>101100 011110 111000 110010 100101 001000 000011 000010</code></div><div class='kv'><span>S 盒输出</span><code>0010 1010 0101 0001 1100 1001 0000 0010</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11010101 00001111 00100010 00000000</code></div><div class='kv'><span>L10</span><code>01010100 11111111 10000110 10001001</code></div><div class='kv'><span>R10</span><code>00111111 01000111 00110011 00111101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 11 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K11）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K11</span><code>196DCD89206D</code></div><div class='kv'><span>L10</span><code>01010100 11111111 10000110 10001001</code></div><div class='kv'><span>R10</span><code>00111111 01000111 00110011 00111101</code></div><div class='kv'><span>E 扩展输出</span><code>100111 111110 101000 001110 100110 100110 100111 111010</code></div><div class='kv'><span>XOR 输出</span><code>100001 101000 011111 000011 000100 110100 100110 010111</code></div><div class='kv'><span>S 盒输出</span><code>1111 1010 0001 1000 0100 0100 1101 1011</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01001110 10011110 10001010 01001011</code></div><div class='kv'><span>L11</span><code>00111111 01000111 00110011 00111101</code></div><div class='kv'><span>R11</span><code>00011010 01100001 00001100 11000010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 12 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K12）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K12</span><code>516DADA2FA80</code></div><div class='kv'><span>L11</span><code>00111111 01000111 00110011 00111101</code></div><div class='kv'><span>R11</span><code>00011010 01100001 00001100 11000010</code></div><div class='kv'><span>E 扩展输出</span><code>000011 110100 001100 000010 100001 011001 011000 000100</code></div><div class='kv'><span>XOR 输出</span><code>010111 100010 111010 101111 001001 110110 110010 000100</code></div><div class='kv'><span>S 盒输出</span><code>1011 1110 1010 1000 0100 1010 1111 1000</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01011010 10111100 00000111 01010111</code></div><div class='kv'><span>L12</span><code>00011010 01100001 00001100 11000010</code></div><div class='kv'><span>R12</span><code>01100101 11111011 00110100 01101010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 13 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K13）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K13</span><code>D1ADA5300737</code></div><div class='kv'><span>L12</span><code>00011010 01100001 00001100 11000010</code></div><div class='kv'><span>R12</span><code>01100101 11111011 00110100 01101010</code></div><div class='kv'><span>E 扩展输出</span><code>001100 001011 111111 110110 100110 101000 001101 010100</code></div><div class='kv'><span>XOR 输出</span><code>111000 010001 001001 010011 101010 101000 010001 100011</code></div><div class='kv'><span>S 盒输出</span><code>0011 1100 0011 0111 1101 0010 1110 0001</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10100101 01111100 00011110 00010111</code></div><div class='kv'><span>L13</span><code>01100101 11111011 00110100 01101010</code></div><div class='kv'><span>R13</span><code>10111111 00011101 00010010 11010101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 14 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K14）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K14</span><code>D1AEA79F0882</code></div><div class='kv'><span>L13</span><code>01100101 11111011 00110100 01101010</code></div><div class='kv'><span>R13</span><code>10111111 00011101 00010010 11010101</code></div><div class='kv'><span>E 扩展输出</span><code>110111 111110 100011 111010 100010 100101 011010 101011</code></div><div class='kv'><span>XOR 输出</span><code>000011 100100 011001 011101 000101 010101 111000 101001</code></div><div class='kv'><span>S 盒输出</span><code>1111 0111 1100 1110 0010 1101 0000 0100</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01010000 11000001 11110011 11111010</code></div><div class='kv'><span>L14</span><code>10111111 00011101 00010010 11010101</code></div><div class='kv'><span>R14</span><code>00110101 00111010 11000111 10010000</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 15 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K15）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K15</span><code>F1B6A6446351</code></div><div class='kv'><span>L14</span><code>10111111 00011101 00010010 11010101</code></div><div class='kv'><span>R14</span><code>00110101 00111010 11000111 10010000</code></div><div class='kv'><span>E 扩展输出</span><code>000110 101010 100111 110101 011000 001111 110010 100000</code></div><div class='kv'><span>XOR 输出</span><code>111010 110001 111101 010011 001001 001001 111111 110001</code></div><div class='kv'><span>S 盒输出</span><code>1010 1011 0010 0111 0100 0111 1100 1111</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11001000 11111110 01111010 00101101</code></div><div class='kv'><span>L15</span><code>00110101 00111010 11000111 10010000</code></div><div class='kv'><span>R15</span><code>01110111 11100011 01101000 11111000</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 16 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K16）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K16</span><code>E0BE2EF48881</code></div><div class='kv'><span>L15</span><code>00110101 00111010 11000111 10010000</code></div><div class='kv'><span>R15</span><code>01110111 11100011 01101000 11111000</code></div><div class='kv'><span>E 扩展输出</span><code>001110 101111 111100 000110 101101 010001 011111 110000</code></div><div class='kv'><span>XOR 输出</span><code>110110 100100 000100 101000 010000 011001 111101 110001</code></div><div class='kv'><span>S 盒输出</span><code>0111 0111 1001 1100 1000 0000 0011 1111</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01001111 00000010 11011111 01110010</code></div><div class='kv'><span>L16</span><code>01110111 11100011 01101000 11111000</code></div><div class='kv'><span>R16</span><code>01111010 00111000 00011000 11100010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密块 1 - 输出阶段</h2>
+      <p class='slide-subtitle'>本页对应模块：交换 + PI</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module active'>交换 + PI</div><div class='module'>输出</div></div>
+      <div class='kv'><span>交换后(PI 前)</span><code>01111010 00111000 00011000 11100010 01110111 11100011 01101000 11111000</code></div><div class='kv'><span>块输出(HEX)</span><code>A0E1805ED6FBEB23</code></div><div class='kv'><span>块输出(BIN)</span><code>10100000 11100001 10000000 01011110 11010110 11111011 11101011 00100011</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密块 2 - IP 阶段</h2>
+      <p class='slide-subtitle'>本页对应模块：初始置换 IP</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module active'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      <div class='kv'><span>输入块(HEX)</span><code>77656E74616F7761</code></div><div class='kv'><span>输入块(BIN)</span><code>01110111 01100101 01101110 01110100 01100001 01101111 01110111 01100001</code></div><div class='kv'><span>IP 后 L0</span><code>11111111 01001001 01101111 11110011</code></div><div class='kv'><span>IP 后 R0</span><code>00000000 11111111 00100100 01100101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 1 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K1）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K1</span><code>F096E633A04C</code></div><div class='kv'><span>L0</span><code>11111111 01001001 01101111 11110011</code></div><div class='kv'><span>R0</span><code>00000000 11111111 00100100 01100101</code></div><div class='kv'><span>E 扩展输出</span><code>100000 000001 011111 111110 100100 001000 001100 001010</code></div><div class='kv'><span>XOR 输出</span><code>011100 001000 000100 011000 101000 110010 001101 000110</code></div><div class='kv'><span>S 盒输出</span><code>0000 0110 1001 1011 1010 0000 0001 0100</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11000111 01000000 00000001 11110000</code></div><div class='kv'><span>L1</span><code>00000000 11111111 00100100 01100101</code></div><div class='kv'><span>R1</span><code>00111000 00001001 01101110 00000011</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 2 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K2）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K2</span><code>E0BE7242065F</code></div><div class='kv'><span>L1</span><code>00000000 11111111 00100100 01100101</code></div><div class='kv'><span>R1</span><code>00111000 00001001 01101110 00000011</code></div><div class='kv'><span>E 扩展输出</span><code>100111 110000 000001 010010 101101 011100 000000 000110</code></div><div class='kv'><span>XOR 输出</span><code>011111 111011 111000 100000 111101 111100 011001 011001</code></div><div class='kv'><span>S 盒输出</span><code>1000 0101 0101 1010 0101 1011 0010 0000</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>00110100 11100101 01100100 01010000</code></div><div class='kv'><span>L2</span><code>00111000 00001001 01101110 00000011</code></div><div class='kv'><span>R2</span><code>00110100 00011010 01000000 00110101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 3 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K3）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K3</span><code>E4FE721FB188</code></div><div class='kv'><span>L2</span><code>00111000 00001001 01101110 00000011</code></div><div class='kv'><span>R2</span><code>00110100 00011010 01000000 00110101</code></div><div class='kv'><span>E 扩展输出</span><code>100110 101000 000011 110100 001000 000000 000110 101010</code></div><div class='kv'><span>XOR 输出</span><code>011111 100111 111010 000110 001111 111011 000000 100010</code></div><div class='kv'><span>S 盒输出</span><code>1000 0001 1010 0011 0001 0000 0100 1011</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10101000 11010010 01001001 00000100</code></div><div class='kv'><span>L3</span><code>00110100 00011010 01000000 00110101</code></div><div class='kv'><span>R3</span><code>10010000 11011011 00100111 00000111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 4 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K4）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K4</span><code>E6F752205561</code></div><div class='kv'><span>L3</span><code>00110100 00011010 01000000 00110101</code></div><div class='kv'><span>R3</span><code>10010000 11011011 00100111 00000111</code></div><div class='kv'><span>E 扩展输出</span><code>110010 100001 011011 110110 100100 001110 100000 001111</code></div><div class='kv'><span>XOR 输出</span><code>001011 001110 000110 100100 101100 001011 110101 101110</code></div><div class='kv'><span>S 盒输出</span><code>0010 0100 1110 1001 0111 1100 0000 0010</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10110000 00000111 00000011 11011100</code></div><div class='kv'><span>L4</span><code>10010000 11011011 00100111 00000111</code></div><div class='kv'><span>R4</span><code>10000100 00011101 01000011 11101001</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 5 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K5）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K5</span><code>6ED7534AA826</code></div><div class='kv'><span>L4</span><code>10010000 11011011 00100111 00000111</code></div><div class='kv'><span>R4</span><code>10000100 00011101 01000011 11101001</code></div><div class='kv'><span>E 扩展输出</span><code>110000 001000 000011 111010 101000 000111 111101 010011</code></div><div class='kv'><span>XOR 输出</span><code>101011 100101 011110 101001 111010 101101 011101 110101</code></div><div class='kv'><span>S 盒输出</span><code>1001 1010 1000 1010 0011 1111 1000 1001</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01111000 11101000 00101001 11001011</code></div><div class='kv'><span>L5</span><code>10000100 00011101 01000011 11101001</code></div><div class='kv'><span>R5</span><code>11101000 00110011 00001110 11001100</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 6 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K6）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K6</span><code>6FD15BE44D98</code></div><div class='kv'><span>L5</span><code>10000100 00011101 01000011 11101001</code></div><div class='kv'><span>R5</span><code>11101000 00110011 00001110 11001100</code></div><div class='kv'><span>E 扩展输出</span><code>011101 010000 000110 100110 100001 011101 011001 011001</code></div><div class='kv'><span>XOR 输出</span><code>000110 101101 000011 111101 011000 011001 101111 000001</code></div><div class='kv'><span>S 盒输出</span><code>0001 0100 0111 0010 1101 0000 0111 0001</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>00100111 01010101 00001100 00010110</code></div><div class='kv'><span>L6</span><code>11101000 00110011 00001110 11001100</code></div><div class='kv'><span>R6</span><code>10100011 01001000 01001111 11111111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 7 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K7）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K7</span><code>2FC1DB09125B</code></div><div class='kv'><span>L6</span><code>11101000 00110011 00001110 11001100</code></div><div class='kv'><span>R6</span><code>10100011 01001000 01001111 11111111</code></div><div class='kv'><span>E 扩展输出</span><code>110100 000110 101001 010000 001001 011111 111111 111111</code></div><div class='kv'><span>XOR 输出</span><code>111111 111010 101110 001011 001011 001110 110110 100100</code></div><div class='kv'><span>S 盒输出</span><code>1101 0011 0000 1111 0111 1000 1000 0100</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11110000 11000100 11010000 11100011</code></div><div class='kv'><span>L7</span><code>10100011 01001000 01001111 11111111</code></div><div class='kv'><span>R7</span><code>00011000 11110111 11011110 00101111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 8 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K8）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K8</span><code>3F499BD7D020</code></div><div class='kv'><span>L7</span><code>10100011 01001000 01001111 11111111</code></div><div class='kv'><span>R7</span><code>00011000 11110111 11011110 00101111</code></div><div class='kv'><span>E 扩展输出</span><code>100011 110001 011110 101111 111011 111100 000101 011110</code></div><div class='kv'><span>XOR 输出</span><code>101100 000101 111000 110100 001110 000001 000101 111110</code></div><div class='kv'><span>S 盒输出</span><code>0010 0100 0101 0011 0110 1010 1011 1000</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10011110 01100101 00000110 10010001</code></div><div class='kv'><span>L8</span><code>00011000 11110111 11011110 00101111</code></div><div class='kv'><span>R8</span><code>00111101 00101101 01001001 01101110</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 9 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K9）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K9</span><code>1F5BC919CA0E</code></div><div class='kv'><span>L8</span><code>00011000 11110111 11011110 00101111</code></div><div class='kv'><span>R8</span><code>00111101 00101101 01001001 01101110</code></div><div class='kv'><span>E 扩展输出</span><code>000111 111010 100101 011010 101001 010010 101101 011100</code></div><div class='kv'><span>XOR 输出</span><code>000000 001111 001010 010011 101111 001110 000101 010010</code></div><div class='kv'><span>S 盒输出</span><code>1110 1110 0011 0111 1101 1000 1011 1001</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11111111 11001100 10011110 00010101</code></div><div class='kv'><span>L9</span><code>00111101 00101101 01001001 01101110</code></div><div class='kv'><span>R9</span><code>11100111 00111011 01000000 00111010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 10 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K10）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K10</span><code>1B79CD545490</code></div><div class='kv'><span>L9</span><code>00111101 00101101 01001001 01101110</code></div><div class='kv'><span>R9</span><code>11100111 00111011 01000000 00111010</code></div><div class='kv'><span>E 扩展输出</span><code>011100 001110 100111 110110 101000 000000 000111 110101</code></div><div class='kv'><span>XOR 输出</span><code>011010 111001 000000 111011 111101 000101 010101 100101</code></div><div class='kv'><span>S 盒输出</span><code>1001 0000 1010 0111 0101 0100 0101 1110</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10101010 11010110 00010001 00101110</code></div><div class='kv'><span>L10</span><code>11100111 00111011 01000000 00111010</code></div><div class='kv'><span>R10</span><code>10010111 11111011 01011000 01000000</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 11 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K11）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K11</span><code>196DCD89206D</code></div><div class='kv'><span>L10</span><code>11100111 00111011 01000000 00111010</code></div><div class='kv'><span>R10</span><code>10010111 11111011 01011000 01000000</code></div><div class='kv'><span>E 扩展输出</span><code>010010 101111 111111 110110 101011 110000 001000 000001</code></div><div class='kv'><span>XOR 输出</span><code>010100 111001 001000 111011 001001 100010 001001 101100</code></div><div class='kv'><span>S 盒输出</span><code>0110 0000 0110 0111 0100 1110 0100 1110</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10011000 01110111 10010010 00101100</code></div><div class='kv'><span>L11</span><code>10010111 11111011 01011000 01000000</code></div><div class='kv'><span>R11</span><code>01111111 01001100 11010010 00010110</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 12 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K12）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K12</span><code>516DADA2FA80</code></div><div class='kv'><span>L11</span><code>10010111 11111011 01011000 01000000</code></div><div class='kv'><span>R11</span><code>01111111 01001100 11010010 00010110</code></div><div class='kv'><span>E 扩展输出</span><code>001111 111110 101001 011001 011010 100100 000010 101100</code></div><div class='kv'><span>XOR 输出</span><code>011011 101000 011111 110100 110010 001011 101000 101100</code></div><div class='kv'><span>S 盒输出</span><code>0101 1010 0001 0011 1001 1100 1100 1110</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11111101 01011010 10000000 00101011</code></div><div class='kv'><span>L12</span><code>01111111 01001100 11010010 00010110</code></div><div class='kv'><span>R12</span><code>01101010 10100001 11011000 01101011</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 13 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K13）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K13</span><code>D1ADA5300737</code></div><div class='kv'><span>L12</span><code>01111111 01001100 11010010 00010110</code></div><div class='kv'><span>R12</span><code>01101010 10100001 11011000 01101011</code></div><div class='kv'><span>E 扩展输出</span><code>101101 010101 010100 000011 111011 110000 001101 010110</code></div><div class='kv'><span>XOR 输出</span><code>011001 001111 100010 100110 110111 110000 010001 100001</code></div><div class='kv'><span>S 盒输出</span><code>1001 1110 0110 0000 1001 0111 1110 0010</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01100001 10111011 00100100 00011111</code></div><div class='kv'><span>L13</span><code>01101010 10100001 11011000 01101011</code></div><div class='kv'><span>R13</span><code>00011110 11110111 11110110 00001001</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 14 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K14）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K14</span><code>D1AEA79F0882</code></div><div class='kv'><span>L13</span><code>01101010 10100001 11011000 01101011</code></div><div class='kv'><span>R13</span><code>00011110 11110111 11110110 00001001</code></div><div class='kv'><span>E 扩展输出</span><code>100011 111101 011110 101111 111110 101100 000001 010010</code></div><div class='kv'><span>XOR 输出</span><code>010111 100111 100100 001000 011001 011100 100011 010000</code></div><div class='kv'><span>S 盒输出</span><code>1011 0001 0100 0000 0011 0101 1011 1010</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>00101010 10000011 01100110 10001011</code></div><div class='kv'><span>L14</span><code>00011110 11110111 11110110 00001001</code></div><div class='kv'><span>R14</span><code>01000000 00100010 10111110 11100000</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 15 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K15）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K15</span><code>F1B6A6446351</code></div><div class='kv'><span>L14</span><code>00011110 11110111 11110110 00001001</code></div><div class='kv'><span>R14</span><code>01000000 00100010 10111110 11100000</code></div><div class='kv'><span>E 扩展输出</span><code>001000 000000 000100 000101 010111 111101 011100 000000</code></div><div class='kv'><span>XOR 输出</span><code>110100 011011 011110 100011 000110 111011 010001 010001</code></div><div class='kv'><span>S 盒输出</span><code>1001 1001 1000 1111 0001 0000 1110 1100</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10101000 11011000 01010101 01100011</code></div><div class='kv'><span>L15</span><code>01000000 00100010 10111110 11100000</code></div><div class='kv'><span>R15</span><code>10110110 00101111 10100011 01101010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 16 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K16）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K16</span><code>E0BE2EF48881</code></div><div class='kv'><span>L15</span><code>01000000 00100010 10111110 11100000</code></div><div class='kv'><span>R15</span><code>10110110 00101111 10100011 01101010</code></div><div class='kv'><span>E 扩展输出</span><code>010110 101100 000101 011111 110100 000110 101101 010101</code></div><div class='kv'><span>XOR 输出</span><code>101110 100111 111101 110001 001001 001110 001111 010100</code></div><div class='kv'><span>S 盒输出</span><code>1011 0001 0010 1001 0100 1000 1010 0011</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10010000 10000110 01001110 01000111</code></div><div class='kv'><span>L16</span><code>10110110 00101111 10100011 01101010</code></div><div class='kv'><span>R16</span><code>11010000 10100100 11110000 10100111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密块 2 - 输出阶段</h2>
+      <p class='slide-subtitle'>本页对应模块：交换 + PI</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module active'>交换 + PI</div><div class='module'>输出</div></div>
+      <div class='kv'><span>交换后(PI 前)</span><code>11010000 10100100 11110000 10100111 10110110 00101111 10100011 01101010</code></div><div class='kv'><span>块输出(HEX)</span><code>29ABB122C4BF46DD</code></div><div class='kv'><span>块输出(BIN)</span><code>00101001 10101011 10110001 00100010 11000100 10111111 01000110 11011101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密块 3 - IP 阶段</h2>
+      <p class='slide-subtitle'>本页对应模块：初始置换 IP</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module active'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      <div class='kv'><span>输入块(HEX)</span><code>6E67060606060606</code></div><div class='kv'><span>输入块(BIN)</span><code>01101110 01100111 00000110 00000110 00000110 00000110 00000110 00000110</code></div><div class='kv'><span>IP 后 L0</span><code>00000011 00000000 11111111 00000010</code></div><div class='kv'><span>IP 后 R0</span><code>00000000 00000011 00000001 11111111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 1 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K1）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K1</span><code>F096E633A04C</code></div><div class='kv'><span>L0</span><code>00000011 00000000 11111111 00000010</code></div><div class='kv'><span>R0</span><code>00000000 00000011 00000001 11111111</code></div><div class='kv'><span>E 扩展输出</span><code>100000 000000 000000 000110 100000 000011 111111 111110</code></div><div class='kv'><span>XOR 输出</span><code>011100 001001 011011 100000 101100 111001 111110 110010</code></div><div class='kv'><span>S 盒输出</span><code>0000 1111 1011 1010 0111 0110 0010 0110</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01100100 01101110 01000101 11111100</code></div><div class='kv'><span>L1</span><code>00000000 00000011 00000001 11111111</code></div><div class='kv'><span>R1</span><code>01100111 01101110 10111010 11111110</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 2 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K2）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K2</span><code>E0BE7242065F</code></div><div class='kv'><span>L1</span><code>00000000 00000011 00000001 11111111</code></div><div class='kv'><span>R1</span><code>01100111 01101110 10111010 11111110</code></div><div class='kv'><span>E 扩展输出</span><code>001100 001110 101101 011101 010111 110101 011111 111100</code></div><div class='kv'><span>XOR 输出</span><code>110100 000101 010100 101111 000111 010101 000110 100011</code></div><div class='kv'><span>S 盒输出</span><code>1001 0100 1100 1000 1100 1101 1110 0001</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>00010001 10010101 00101101 01011011</code></div><div class='kv'><span>L2</span><code>01100111 01101110 10111010 11111110</code></div><div class='kv'><span>R2</span><code>00010001 10010110 00101100 10100100</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 3 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K3）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K3</span><code>E4FE721FB188</code></div><div class='kv'><span>L2</span><code>01100111 01101110 10111010 11111110</code></div><div class='kv'><span>R2</span><code>00010001 10010110 00101100 10100100</code></div><div class='kv'><span>E 扩展输出</span><code>000010 100011 110010 101100 000101 011001 010100 001000</code></div><div class='kv'><span>XOR 输出</span><code>111011 101100 001011 011110 000010 100010 010010 000000</code></div><div class='kv'><span>S 盒输出</span><code>0000 1101 0100 1111 1100 1110 1100 1101</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10011001 01111101 01011000 01111001</code></div><div class='kv'><span>L3</span><code>00010001 10010110 00101100 10100100</code></div><div class='kv'><span>R3</span><code>11111110 00010011 11100010 10000111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 4 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K4）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K4</span><code>E6F752205561</code></div><div class='kv'><span>L3</span><code>00010001 10010110 00101100 10100100</code></div><div class='kv'><span>R3</span><code>11111110 00010011 11100010 10000111</code></div><div class='kv'><span>E 扩展输出</span><code>111111 111100 000010 100111 111100 000101 010000 001111</code></div><div class='kv'><span>XOR 输出</span><code>000110 010011 011111 110101 110100 000000 000101 101110</code></div><div class='kv'><span>S 盒输出</span><code>0001 0000 0001 0101 1100 1100 1011 0010</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10010111 00000110 00010100 00001011</code></div><div class='kv'><span>L4</span><code>11111110 00010011 11100010 10000111</code></div><div class='kv'><span>R4</span><code>10000110 10010000 00111000 10101111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 5 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K5）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K5</span><code>6ED7534AA826</code></div><div class='kv'><span>L4</span><code>11111110 00010011 11100010 10000111</code></div><div class='kv'><span>R4</span><code>10000110 10010000 00111000 10101111</code></div><div class='kv'><span>E 扩展输出</span><code>110000 001101 010010 100000 000111 110001 010101 011111</code></div><div class='kv'><span>XOR 输出</span><code>101011 100000 001111 110011 010101 011011 110101 111001</code></div><div class='kv'><span>S 盒输出</span><code>1001 0000 1010 0100 1111 1011 0000 0011</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>00110001 10100110 00111001 10000110</code></div><div class='kv'><span>L5</span><code>10000110 10010000 00111000 10101111</code></div><div class='kv'><span>R5</span><code>11001111 10110101 11011011 00000001</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 6 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K6）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K6</span><code>6FD15BE44D98</code></div><div class='kv'><span>L5</span><code>10000110 10010000 00111000 10101111</code></div><div class='kv'><span>R5</span><code>11001111 10110101 11011011 00000001</code></div><div class='kv'><span>E 扩展输出</span><code>111001 011111 110110 101011 111011 110110 100000 000011</code></div><div class='kv'><span>XOR 输出</span><code>100010 100010 110011 110000 000010 110010 010110 011011</code></div><div class='kv'><span>S 盒输出</span><code>0001 1110 1111 1111 1100 0000 0111 1110</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11001111 01011111 00010101 01110110</code></div><div class='kv'><span>L6</span><code>11001111 10110101 11011011 00000001</code></div><div class='kv'><span>R6</span><code>01001001 11001111 00101101 11011001</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 7 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K7）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K7</span><code>2FC1DB09125B</code></div><div class='kv'><span>L6</span><code>11001111 10110101 11011011 00000001</code></div><div class='kv'><span>R6</span><code>01001001 11001111 00101101 11011001</code></div><div class='kv'><span>E 扩展输出</span><code>101001 010011 111001 011110 100101 011011 111011 110010</code></div><div class='kv'><span>XOR 输出</span><code>100010 101111 111110 000101 100111 001010 110010 101001</code></div><div class='kv'><span>S 盒输出</span><code>0001 0010 0111 1011 0111 0010 1111 0100</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11100110 01110101 00000100 11100111</code></div><div class='kv'><span>L7</span><code>01001001 11001111 00101101 11011001</code></div><div class='kv'><span>R7</span><code>00101001 11000000 11011111 11100110</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 8 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K8）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K8</span><code>3F499BD7D020</code></div><div class='kv'><span>L7</span><code>01001001 11001111 00101101 11011001</code></div><div class='kv'><span>R7</span><code>00101001 11000000 11011111 11100110</code></div><div class='kv'><span>E 扩展输出</span><code>000101 010011 111000 000001 011011 111111 111100 001100</code></div><div class='kv'><span>XOR 输出</span><code>001010 100111 011110 011010 101110 000010 111100 101100</code></div><div class='kv'><span>S 盒输出</span><code>1111 0001 1000 1100 1000 0001 1001 1110</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>00001011 10000010 11110011 01100011</code></div><div class='kv'><span>L8</span><code>00101001 11000000 11011111 11100110</code></div><div class='kv'><span>R8</span><code>01000010 01001101 11011110 10111010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 9 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K9）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K9</span><code>1F5BC919CA0E</code></div><div class='kv'><span>L8</span><code>00101001 11000000 11011111 11100110</code></div><div class='kv'><span>R8</span><code>01000010 01001101 11011110 10111010</code></div><div class='kv'><span>E 扩展输出</span><code>001000 000100 001001 011011 111011 111101 010111 110100</code></div><div class='kv'><span>XOR 输出</span><code>001111 110001 100110 010010 111101 100001 111111 111010</code></div><div class='kv'><span>S 盒输出</span><code>0001 1011 1001 0010 0101 0100 1100 0011</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01100100 01011110 01001001 00001011</code></div><div class='kv'><span>L9</span><code>01000010 01001101 11011110 10111010</code></div><div class='kv'><span>R9</span><code>01001101 10011110 10010110 11101101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 10 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K10）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K10</span><code>1B79CD545490</code></div><div class='kv'><span>L9</span><code>01000010 01001101 11011110 10111010</code></div><div class='kv'><span>R9</span><code>01001101 10011110 10010110 11101101</code></div><div class='kv'><span>E 扩展输出</span><code>101001 011011 110011 111101 010010 101101 011101 011010</code></div><div class='kv'><span>XOR 输出</span><code>101111 101100 010100 110000 000111 101000 001111 001010</code></div><div class='kv'><span>S 盒输出</span><code>0111 1101 1100 1111 1100 0010 1010 1111</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10001001 01101111 11011111 01110011</code></div><div class='kv'><span>L10</span><code>01001101 10011110 10010110 11101101</code></div><div class='kv'><span>R10</span><code>11001011 00100010 00000001 11001001</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 11 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K11）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K11</span><code>196DCD89206D</code></div><div class='kv'><span>L10</span><code>01001101 10011110 10010110 11101101</code></div><div class='kv'><span>R10</span><code>11001011 00100010 00000001 11001001</code></div><div class='kv'><span>E 扩展输出</span><code>111001 010110 100100 000100 000000 000011 111001 010011</code></div><div class='kv'><span>XOR 输出</span><code>111111 000000 010011 001001 100010 010001 111000 111110</code></div><div class='kv'><span>S 盒输出</span><code>1101 1111 1000 0110 0010 0110 0000 1000</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01001000 11101000 11010001 10011010</code></div><div class='kv'><span>L11</span><code>11001011 00100010 00000001 11001001</code></div><div class='kv'><span>R11</span><code>00000101 01110110 01000111 01110111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 12 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K12）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K12</span><code>516DADA2FA80</code></div><div class='kv'><span>L11</span><code>11001011 00100010 00000001 11001001</code></div><div class='kv'><span>R11</span><code>00000101 01110110 01000111 01110111</code></div><div class='kv'><span>E 扩展输出</span><code>100000 001010 101110 101100 001000 001110 101110 101110</code></div><div class='kv'><span>XOR 输出</span><code>110100 011100 011000 000001 100000 100001 000100 101110</code></div><div class='kv'><span>S 盒输出</span><code>1001 0101 1011 1101 0100 0100 0010 0010</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10000100 10000110 01010101 01011110</code></div><div class='kv'><span>L12</span><code>00000101 01110110 01000111 01110111</code></div><div class='kv'><span>R12</span><code>01001111 10100100 01010100 10010111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 13 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K13）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K13</span><code>D1ADA5300737</code></div><div class='kv'><span>L12</span><code>00000101 01110110 01000111 01110111</code></div><div class='kv'><span>R12</span><code>01001111 10100100 01010100 10010111</code></div><div class='kv'><span>E 扩展输出</span><code>101001 011111 110100 001000 001010 101001 010010 101110</code></div><div class='kv'><span>XOR 输出</span><code>011101 000101 000010 101101 000110 101001 001110 011001</code></div><div class='kv'><span>S 盒输出</span><code>0011 0100 0000 1101 0001 1001 1101 0000</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10110010 00010000 00110010 01010011</code></div><div class='kv'><span>L13</span><code>01001111 10100100 01010100 10010111</code></div><div class='kv'><span>R13</span><code>10110111 01100110 01110101 00100100</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 14 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K14）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K14</span><code>D1AEA79F0882</code></div><div class='kv'><span>L13</span><code>01001111 10100100 01010100 10010111</code></div><div class='kv'><span>R13</span><code>10110111 01100110 01110101 00100100</code></div><div class='kv'><span>E 扩展输出</span><code>010110 101110 101100 001100 001110 101010 100100 001001</code></div><div class='kv'><span>XOR 输出</span><code>100010 110100 010110 101011 101001 011010 000110 001011</code></div><div class='kv'><span>S 盒输出</span><code>0001 1100 0111 0001 0001 0111 1110 0011</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10100100 00111011 00101100 00011111</code></div><div class='kv'><span>L14</span><code>10110111 01100110 01110101 00100100</code></div><div class='kv'><span>R14</span><code>11101011 10011111 01111000 10001000</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 15 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K15）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K15</span><code>F1B6A6446351</code></div><div class='kv'><span>L14</span><code>10110111 01100110 01110101 00100100</code></div><div class='kv'><span>R14</span><code>11101011 10011111 01111000 10001000</code></div><div class='kv'><span>E 扩展输出</span><code>011101 010111 110011 111110 101111 110001 010001 010001</code></div><div class='kv'><span>XOR 输出</span><code>100001 001100 101001 011000 111110 110111 011100 000000</code></div><div class='kv'><span>S 盒输出</span><code>1111 0011 0110 1011 1110 0111 0110 1101</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11001001 11110101 11101110 11101110</code></div><div class='kv'><span>L15</span><code>11101011 10011111 01111000 10001000</code></div><div class='kv'><span>R15</span><code>01111110 10010011 10011011 11001010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密第 16 轮</h2>
+      <p class='slide-subtitle'>本页对应模块：E -> XOR -> S 盒 -> P 盒 -> Feistel 更新（K16）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module active'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K16</span><code>E0BE2EF48881</code></div><div class='kv'><span>L15</span><code>11101011 10011111 01111000 10001000</code></div><div class='kv'><span>R15</span><code>01111110 10010011 10011011 11001010</code></div><div class='kv'><span>E 扩展输出</span><code>001111 111101 010010 100111 110011 110111 111001 010100</code></div><div class='kv'><span>XOR 输出</span><code>110111 110110 101010 001001 001110 111111 011011 010101</code></div><div class='kv'><span>S 盒输出</span><code>1110 0110 1111 0110 0110 1101 1111 0110</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01010110 11010111 10110111 10111101</code></div><div class='kv'><span>L16</span><code>01111110 10010011 10011011 11001010</code></div><div class='kv'><span>R16</span><code>10111101 01001000 11001111 00110101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>加密块 3 - 输出阶段</h2>
+      <p class='slide-subtitle'>本页对应模块：交换 + PI</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module active'>交换 + PI</div><div class='module'>输出</div></div>
+      <div class='kv'><span>交换后(PI 前)</span><code>10111101 01001000 11001111 00110101 01111110 10010011 10011011 11001010</code></div><div class='kv'><span>块输出(HEX)</span><code>6DAEC5DEE9C1966E</code></div><div class='kv'><span>块输出(BIN)</span><code>01101101 10101110 11000101 11011110 11101001 11000001 10010110 01101110</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密块 1 - IP 阶段</h2>
+      <p class='slide-subtitle'>本页对应模块：初始置换 IP（子密钥逆序使用）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module active'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      <div class='kv'><span>输入密文块(HEX)</span><code>A0E1805ED6FBEB23</code></div><div class='kv'><span>IP 后 L0</span><code>01111010 00111000 00011000 11100010</code></div><div class='kv'><span>IP 后 R0</span><code>01110111 11100011 01101000 11111000</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 1 轮 (K16)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K16</span><code>E0BE2EF48881</code></div><div class='kv'><span>L0</span><code>01111010 00111000 00011000 11100010</code></div><div class='kv'><span>R0</span><code>01110111 11100011 01101000 11111000</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01001111 00000010 11011111 01110010</code></div><div class='kv'><span>L1</span><code>01110111 11100011 01101000 11111000</code></div><div class='kv'><span>R1</span><code>00110101 00111010 11000111 10010000</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 2 轮 (K15)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K15</span><code>F1B6A6446351</code></div><div class='kv'><span>L1</span><code>01110111 11100011 01101000 11111000</code></div><div class='kv'><span>R1</span><code>00110101 00111010 11000111 10010000</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11001000 11111110 01111010 00101101</code></div><div class='kv'><span>L2</span><code>00110101 00111010 11000111 10010000</code></div><div class='kv'><span>R2</span><code>10111111 00011101 00010010 11010101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 3 轮 (K14)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K14</span><code>D1AEA79F0882</code></div><div class='kv'><span>L2</span><code>00110101 00111010 11000111 10010000</code></div><div class='kv'><span>R2</span><code>10111111 00011101 00010010 11010101</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01010000 11000001 11110011 11111010</code></div><div class='kv'><span>L3</span><code>10111111 00011101 00010010 11010101</code></div><div class='kv'><span>R3</span><code>01100101 11111011 00110100 01101010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 4 轮 (K13)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K13</span><code>D1ADA5300737</code></div><div class='kv'><span>L3</span><code>10111111 00011101 00010010 11010101</code></div><div class='kv'><span>R3</span><code>01100101 11111011 00110100 01101010</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10100101 01111100 00011110 00010111</code></div><div class='kv'><span>L4</span><code>01100101 11111011 00110100 01101010</code></div><div class='kv'><span>R4</span><code>00011010 01100001 00001100 11000010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 5 轮 (K12)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K12</span><code>516DADA2FA80</code></div><div class='kv'><span>L4</span><code>01100101 11111011 00110100 01101010</code></div><div class='kv'><span>R4</span><code>00011010 01100001 00001100 11000010</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01011010 10111100 00000111 01010111</code></div><div class='kv'><span>L5</span><code>00011010 01100001 00001100 11000010</code></div><div class='kv'><span>R5</span><code>00111111 01000111 00110011 00111101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 6 轮 (K11)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K11</span><code>196DCD89206D</code></div><div class='kv'><span>L5</span><code>00011010 01100001 00001100 11000010</code></div><div class='kv'><span>R5</span><code>00111111 01000111 00110011 00111101</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01001110 10011110 10001010 01001011</code></div><div class='kv'><span>L6</span><code>00111111 01000111 00110011 00111101</code></div><div class='kv'><span>R6</span><code>01010100 11111111 10000110 10001001</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 7 轮 (K10)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K10</span><code>1B79CD545490</code></div><div class='kv'><span>L6</span><code>00111111 01000111 00110011 00111101</code></div><div class='kv'><span>R6</span><code>01010100 11111111 10000110 10001001</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11010101 00001111 00100010 00000000</code></div><div class='kv'><span>L7</span><code>01010100 11111111 10000110 10001001</code></div><div class='kv'><span>R7</span><code>11101010 01001000 00010001 00111101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 8 轮 (K9)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K9</span><code>1F5BC919CA0E</code></div><div class='kv'><span>L7</span><code>01010100 11111111 10000110 10001001</code></div><div class='kv'><span>R7</span><code>11101010 01001000 00010001 00111101</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10001100 10101100 01001111 00011001</code></div><div class='kv'><span>L8</span><code>11101010 01001000 00010001 00111101</code></div><div class='kv'><span>R8</span><code>11011000 01010011 11001001 10010000</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 9 轮 (K8)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K8</span><code>3F499BD7D020</code></div><div class='kv'><span>L8</span><code>11101010 01001000 00010001 00111101</code></div><div class='kv'><span>R8</span><code>11011000 01010011 11001001 10010000</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>00100111 00111000 10101110 11000101</code></div><div class='kv'><span>L9</span><code>11011000 01010011 11001001 10010000</code></div><div class='kv'><span>R9</span><code>11001101 01110000 10111111 11111000</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 10 轮 (K7)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K7</span><code>2FC1DB09125B</code></div><div class='kv'><span>L9</span><code>11011000 01010011 11001001 10010000</code></div><div class='kv'><span>R9</span><code>11001101 01110000 10111111 11111000</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01101001 11101101 01100010 10100101</code></div><div class='kv'><span>L10</span><code>11001101 01110000 10111111 11111000</code></div><div class='kv'><span>R10</span><code>10110001 10111110 10101011 00110101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 11 轮 (K6)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K6</span><code>6FD15BE44D98</code></div><div class='kv'><span>L10</span><code>11001101 01110000 10111111 11111000</code></div><div class='kv'><span>R10</span><code>10110001 10111110 10101011 00110101</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01111110 00001100 00100100 10101010</code></div><div class='kv'><span>L11</span><code>10110001 10111110 10101011 00110101</code></div><div class='kv'><span>R11</span><code>10110011 01111100 10011011 01010010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 12 轮 (K5)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K5</span><code>6ED7534AA826</code></div><div class='kv'><span>L11</span><code>10110001 10111110 10101011 00110101</code></div><div class='kv'><span>R11</span><code>10110011 01111100 10011011 01010010</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11001101 11000110 10101000 11101010</code></div><div class='kv'><span>L12</span><code>10110011 01111100 10011011 01010010</code></div><div class='kv'><span>R12</span><code>01111100 01111000 00000011 11011111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 13 轮 (K4)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K4</span><code>E6F752205561</code></div><div class='kv'><span>L12</span><code>10110011 01111100 10011011 01010010</code></div><div class='kv'><span>R12</span><code>01111100 01111000 00000011 11011111</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01100100 11011111 10110101 10000001</code></div><div class='kv'><span>L13</span><code>01111100 01111000 00000011 11011111</code></div><div class='kv'><span>R13</span><code>11010111 10100011 00101110 11010011</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 14 轮 (K3)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K3</span><code>E4FE721FB188</code></div><div class='kv'><span>L13</span><code>01111100 01111000 00000011 11011111</code></div><div class='kv'><span>R13</span><code>11010111 10100011 00101110 11010011</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10001000 11010001 10101110 10101110</code></div><div class='kv'><span>L14</span><code>11010111 10100011 00101110 11010011</code></div><div class='kv'><span>R14</span><code>11110100 10101001 10101101 01110001</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 15 轮 (K2)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K2</span><code>E0BE7242065F</code></div><div class='kv'><span>L14</span><code>11010111 10100011 00101110 11010011</code></div><div class='kv'><span>R14</span><code>11110100 10101001 10101101 01110001</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11010111 01011100 00101100 00111111</code></div><div class='kv'><span>L15</span><code>11110100 10101001 10101101 01110001</code></div><div class='kv'><span>R15</span><code>00000000 11111111 00000010 11101100</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 16 轮 (K1)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K1</span><code>F096E633A04C</code></div><div class='kv'><span>L15</span><code>11110100 10101001 10101101 01110001</code></div><div class='kv'><span>R15</span><code>00000000 11111111 00000010 11101100</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11110100 01010110 10101101 11011010</code></div><div class='kv'><span>L16</span><code>00000000 11111111 00000010 11101100</code></div><div class='kv'><span>R16</span><code>00000000 11111111 00000000 10101011</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密块 1 - 输出阶段</h2>
+      <p class='slide-subtitle'>本页对应模块：交换 + PI</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module active'>交换 + PI</div><div class='module'>输出</div></div>
+      <div class='kv'><span>交换后(PI 前)</span><code>00000000 11111111 00000000 10101011 00000000 11111111 00000010 11101100</code></div><div class='kv'><span>块输出(HEX)</span><code>3139323330333233</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密块 2 - IP 阶段</h2>
+      <p class='slide-subtitle'>本页对应模块：初始置换 IP（子密钥逆序使用）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module active'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      <div class='kv'><span>输入密文块(HEX)</span><code>29ABB122C4BF46DD</code></div><div class='kv'><span>IP 后 L0</span><code>11010000 10100100 11110000 10100111</code></div><div class='kv'><span>IP 后 R0</span><code>10110110 00101111 10100011 01101010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 1 轮 (K16)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K16</span><code>E0BE2EF48881</code></div><div class='kv'><span>L0</span><code>11010000 10100100 11110000 10100111</code></div><div class='kv'><span>R0</span><code>10110110 00101111 10100011 01101010</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10010000 10000110 01001110 01000111</code></div><div class='kv'><span>L1</span><code>10110110 00101111 10100011 01101010</code></div><div class='kv'><span>R1</span><code>01000000 00100010 10111110 11100000</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 2 轮 (K15)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K15</span><code>F1B6A6446351</code></div><div class='kv'><span>L1</span><code>10110110 00101111 10100011 01101010</code></div><div class='kv'><span>R1</span><code>01000000 00100010 10111110 11100000</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10101000 11011000 01010101 01100011</code></div><div class='kv'><span>L2</span><code>01000000 00100010 10111110 11100000</code></div><div class='kv'><span>R2</span><code>00011110 11110111 11110110 00001001</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 3 轮 (K14)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K14</span><code>D1AEA79F0882</code></div><div class='kv'><span>L2</span><code>01000000 00100010 10111110 11100000</code></div><div class='kv'><span>R2</span><code>00011110 11110111 11110110 00001001</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>00101010 10000011 01100110 10001011</code></div><div class='kv'><span>L3</span><code>00011110 11110111 11110110 00001001</code></div><div class='kv'><span>R3</span><code>01101010 10100001 11011000 01101011</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 4 轮 (K13)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K13</span><code>D1ADA5300737</code></div><div class='kv'><span>L3</span><code>00011110 11110111 11110110 00001001</code></div><div class='kv'><span>R3</span><code>01101010 10100001 11011000 01101011</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01100001 10111011 00100100 00011111</code></div><div class='kv'><span>L4</span><code>01101010 10100001 11011000 01101011</code></div><div class='kv'><span>R4</span><code>01111111 01001100 11010010 00010110</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 5 轮 (K12)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K12</span><code>516DADA2FA80</code></div><div class='kv'><span>L4</span><code>01101010 10100001 11011000 01101011</code></div><div class='kv'><span>R4</span><code>01111111 01001100 11010010 00010110</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11111101 01011010 10000000 00101011</code></div><div class='kv'><span>L5</span><code>01111111 01001100 11010010 00010110</code></div><div class='kv'><span>R5</span><code>10010111 11111011 01011000 01000000</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 6 轮 (K11)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K11</span><code>196DCD89206D</code></div><div class='kv'><span>L5</span><code>01111111 01001100 11010010 00010110</code></div><div class='kv'><span>R5</span><code>10010111 11111011 01011000 01000000</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10011000 01110111 10010010 00101100</code></div><div class='kv'><span>L6</span><code>10010111 11111011 01011000 01000000</code></div><div class='kv'><span>R6</span><code>11100111 00111011 01000000 00111010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 7 轮 (K10)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K10</span><code>1B79CD545490</code></div><div class='kv'><span>L6</span><code>10010111 11111011 01011000 01000000</code></div><div class='kv'><span>R6</span><code>11100111 00111011 01000000 00111010</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10101010 11010110 00010001 00101110</code></div><div class='kv'><span>L7</span><code>11100111 00111011 01000000 00111010</code></div><div class='kv'><span>R7</span><code>00111101 00101101 01001001 01101110</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 8 轮 (K9)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K9</span><code>1F5BC919CA0E</code></div><div class='kv'><span>L7</span><code>11100111 00111011 01000000 00111010</code></div><div class='kv'><span>R7</span><code>00111101 00101101 01001001 01101110</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11111111 11001100 10011110 00010101</code></div><div class='kv'><span>L8</span><code>00111101 00101101 01001001 01101110</code></div><div class='kv'><span>R8</span><code>00011000 11110111 11011110 00101111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 9 轮 (K8)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K8</span><code>3F499BD7D020</code></div><div class='kv'><span>L8</span><code>00111101 00101101 01001001 01101110</code></div><div class='kv'><span>R8</span><code>00011000 11110111 11011110 00101111</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10011110 01100101 00000110 10010001</code></div><div class='kv'><span>L9</span><code>00011000 11110111 11011110 00101111</code></div><div class='kv'><span>R9</span><code>10100011 01001000 01001111 11111111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 10 轮 (K7)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K7</span><code>2FC1DB09125B</code></div><div class='kv'><span>L9</span><code>00011000 11110111 11011110 00101111</code></div><div class='kv'><span>R9</span><code>10100011 01001000 01001111 11111111</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11110000 11000100 11010000 11100011</code></div><div class='kv'><span>L10</span><code>10100011 01001000 01001111 11111111</code></div><div class='kv'><span>R10</span><code>11101000 00110011 00001110 11001100</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 11 轮 (K6)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K6</span><code>6FD15BE44D98</code></div><div class='kv'><span>L10</span><code>10100011 01001000 01001111 11111111</code></div><div class='kv'><span>R10</span><code>11101000 00110011 00001110 11001100</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>00100111 01010101 00001100 00010110</code></div><div class='kv'><span>L11</span><code>11101000 00110011 00001110 11001100</code></div><div class='kv'><span>R11</span><code>10000100 00011101 01000011 11101001</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 12 轮 (K5)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K5</span><code>6ED7534AA826</code></div><div class='kv'><span>L11</span><code>11101000 00110011 00001110 11001100</code></div><div class='kv'><span>R11</span><code>10000100 00011101 01000011 11101001</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01111000 11101000 00101001 11001011</code></div><div class='kv'><span>L12</span><code>10000100 00011101 01000011 11101001</code></div><div class='kv'><span>R12</span><code>10010000 11011011 00100111 00000111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 13 轮 (K4)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K4</span><code>E6F752205561</code></div><div class='kv'><span>L12</span><code>10000100 00011101 01000011 11101001</code></div><div class='kv'><span>R12</span><code>10010000 11011011 00100111 00000111</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10110000 00000111 00000011 11011100</code></div><div class='kv'><span>L13</span><code>10010000 11011011 00100111 00000111</code></div><div class='kv'><span>R13</span><code>00110100 00011010 01000000 00110101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 14 轮 (K3)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K3</span><code>E4FE721FB188</code></div><div class='kv'><span>L13</span><code>10010000 11011011 00100111 00000111</code></div><div class='kv'><span>R13</span><code>00110100 00011010 01000000 00110101</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10101000 11010010 01001001 00000100</code></div><div class='kv'><span>L14</span><code>00110100 00011010 01000000 00110101</code></div><div class='kv'><span>R14</span><code>00111000 00001001 01101110 00000011</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 15 轮 (K2)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K2</span><code>E0BE7242065F</code></div><div class='kv'><span>L14</span><code>00110100 00011010 01000000 00110101</code></div><div class='kv'><span>R14</span><code>00111000 00001001 01101110 00000011</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>00110100 11100101 01100100 01010000</code></div><div class='kv'><span>L15</span><code>00111000 00001001 01101110 00000011</code></div><div class='kv'><span>R15</span><code>00000000 11111111 00100100 01100101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 16 轮 (K1)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K1</span><code>F096E633A04C</code></div><div class='kv'><span>L15</span><code>00111000 00001001 01101110 00000011</code></div><div class='kv'><span>R15</span><code>00000000 11111111 00100100 01100101</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11000111 01000000 00000001 11110000</code></div><div class='kv'><span>L16</span><code>00000000 11111111 00100100 01100101</code></div><div class='kv'><span>R16</span><code>11111111 01001001 01101111 11110011</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密块 2 - 输出阶段</h2>
+      <p class='slide-subtitle'>本页对应模块：交换 + PI</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module active'>交换 + PI</div><div class='module'>输出</div></div>
+      <div class='kv'><span>交换后(PI 前)</span><code>11111111 01001001 01101111 11110011 00000000 11111111 00100100 01100101</code></div><div class='kv'><span>块输出(HEX)</span><code>77656E74616F7761</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密块 3 - IP 阶段</h2>
+      <p class='slide-subtitle'>本页对应模块：初始置换 IP（子密钥逆序使用）</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module active'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      <div class='kv'><span>输入密文块(HEX)</span><code>6DAEC5DEE9C1966E</code></div><div class='kv'><span>IP 后 L0</span><code>10111101 01001000 11001111 00110101</code></div><div class='kv'><span>IP 后 R0</span><code>01111110 10010011 10011011 11001010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 1 轮 (K16)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K16</span><code>E0BE2EF48881</code></div><div class='kv'><span>L0</span><code>10111101 01001000 11001111 00110101</code></div><div class='kv'><span>R0</span><code>01111110 10010011 10011011 11001010</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01010110 11010111 10110111 10111101</code></div><div class='kv'><span>L1</span><code>01111110 10010011 10011011 11001010</code></div><div class='kv'><span>R1</span><code>11101011 10011111 01111000 10001000</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 2 轮 (K15)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K15</span><code>F1B6A6446351</code></div><div class='kv'><span>L1</span><code>01111110 10010011 10011011 11001010</code></div><div class='kv'><span>R1</span><code>11101011 10011111 01111000 10001000</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11001001 11110101 11101110 11101110</code></div><div class='kv'><span>L2</span><code>11101011 10011111 01111000 10001000</code></div><div class='kv'><span>R2</span><code>10110111 01100110 01110101 00100100</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 3 轮 (K14)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K14</span><code>D1AEA79F0882</code></div><div class='kv'><span>L2</span><code>11101011 10011111 01111000 10001000</code></div><div class='kv'><span>R2</span><code>10110111 01100110 01110101 00100100</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10100100 00111011 00101100 00011111</code></div><div class='kv'><span>L3</span><code>10110111 01100110 01110101 00100100</code></div><div class='kv'><span>R3</span><code>01001111 10100100 01010100 10010111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 4 轮 (K13)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K13</span><code>D1ADA5300737</code></div><div class='kv'><span>L3</span><code>10110111 01100110 01110101 00100100</code></div><div class='kv'><span>R3</span><code>01001111 10100100 01010100 10010111</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10110010 00010000 00110010 01010011</code></div><div class='kv'><span>L4</span><code>01001111 10100100 01010100 10010111</code></div><div class='kv'><span>R4</span><code>00000101 01110110 01000111 01110111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 5 轮 (K12)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K12</span><code>516DADA2FA80</code></div><div class='kv'><span>L4</span><code>01001111 10100100 01010100 10010111</code></div><div class='kv'><span>R4</span><code>00000101 01110110 01000111 01110111</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10000100 10000110 01010101 01011110</code></div><div class='kv'><span>L5</span><code>00000101 01110110 01000111 01110111</code></div><div class='kv'><span>R5</span><code>11001011 00100010 00000001 11001001</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 6 轮 (K11)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K11</span><code>196DCD89206D</code></div><div class='kv'><span>L5</span><code>00000101 01110110 01000111 01110111</code></div><div class='kv'><span>R5</span><code>11001011 00100010 00000001 11001001</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01001000 11101000 11010001 10011010</code></div><div class='kv'><span>L6</span><code>11001011 00100010 00000001 11001001</code></div><div class='kv'><span>R6</span><code>01001101 10011110 10010110 11101101</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 7 轮 (K10)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K10</span><code>1B79CD545490</code></div><div class='kv'><span>L6</span><code>11001011 00100010 00000001 11001001</code></div><div class='kv'><span>R6</span><code>01001101 10011110 10010110 11101101</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10001001 01101111 11011111 01110011</code></div><div class='kv'><span>L7</span><code>01001101 10011110 10010110 11101101</code></div><div class='kv'><span>R7</span><code>01000010 01001101 11011110 10111010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 8 轮 (K9)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K9</span><code>1F5BC919CA0E</code></div><div class='kv'><span>L7</span><code>01001101 10011110 10010110 11101101</code></div><div class='kv'><span>R7</span><code>01000010 01001101 11011110 10111010</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01100100 01011110 01001001 00001011</code></div><div class='kv'><span>L8</span><code>01000010 01001101 11011110 10111010</code></div><div class='kv'><span>R8</span><code>00101001 11000000 11011111 11100110</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 9 轮 (K8)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K8</span><code>3F499BD7D020</code></div><div class='kv'><span>L8</span><code>01000010 01001101 11011110 10111010</code></div><div class='kv'><span>R8</span><code>00101001 11000000 11011111 11100110</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>00001011 10000010 11110011 01100011</code></div><div class='kv'><span>L9</span><code>00101001 11000000 11011111 11100110</code></div><div class='kv'><span>R9</span><code>01001001 11001111 00101101 11011001</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 10 轮 (K7)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K7</span><code>2FC1DB09125B</code></div><div class='kv'><span>L9</span><code>00101001 11000000 11011111 11100110</code></div><div class='kv'><span>R9</span><code>01001001 11001111 00101101 11011001</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11100110 01110101 00000100 11100111</code></div><div class='kv'><span>L10</span><code>01001001 11001111 00101101 11011001</code></div><div class='kv'><span>R10</span><code>11001111 10110101 11011011 00000001</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 11 轮 (K6)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K6</span><code>6FD15BE44D98</code></div><div class='kv'><span>L10</span><code>01001001 11001111 00101101 11011001</code></div><div class='kv'><span>R10</span><code>11001111 10110101 11011011 00000001</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>11001111 01011111 00010101 01110110</code></div><div class='kv'><span>L11</span><code>11001111 10110101 11011011 00000001</code></div><div class='kv'><span>R11</span><code>10000110 10010000 00111000 10101111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 12 轮 (K5)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K5</span><code>6ED7534AA826</code></div><div class='kv'><span>L11</span><code>11001111 10110101 11011011 00000001</code></div><div class='kv'><span>R11</span><code>10000110 10010000 00111000 10101111</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>00110001 10100110 00111001 10000110</code></div><div class='kv'><span>L12</span><code>10000110 10010000 00111000 10101111</code></div><div class='kv'><span>R12</span><code>11111110 00010011 11100010 10000111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 13 轮 (K4)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K4</span><code>E6F752205561</code></div><div class='kv'><span>L12</span><code>10000110 10010000 00111000 10101111</code></div><div class='kv'><span>R12</span><code>11111110 00010011 11100010 10000111</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10010111 00000110 00010100 00001011</code></div><div class='kv'><span>L13</span><code>11111110 00010011 11100010 10000111</code></div><div class='kv'><span>R13</span><code>00010001 10010110 00101100 10100100</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 14 轮 (K3)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K3</span><code>E4FE721FB188</code></div><div class='kv'><span>L13</span><code>11111110 00010011 11100010 10000111</code></div><div class='kv'><span>R13</span><code>00010001 10010110 00101100 10100100</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>10011001 01111101 01011000 01111001</code></div><div class='kv'><span>L14</span><code>00010001 10010110 00101100 10100100</code></div><div class='kv'><span>R14</span><code>01100111 01101110 10111010 11111110</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 15 轮 (K2)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K2</span><code>E0BE7242065F</code></div><div class='kv'><span>L14</span><code>00010001 10010110 00101100 10100100</code></div><div class='kv'><span>R14</span><code>01100111 01101110 10111010 11111110</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>00010001 10010101 00101101 01011011</code></div><div class='kv'><span>L15</span><code>01100111 01101110 10111010 11111110</code></div><div class='kv'><span>R15</span><code>00000000 00000011 00000001 11111111</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密第 16 轮 (K1)</h2>
+      <p class='slide-subtitle'>本页对应模块：轮函数与 Feistel 更新</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module active'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module'>输出</div></div>
+      
+    <div class='f-diagram'>
+      <div class='f-box'>R(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>E 扩展(48)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>XOR 子密钥</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>S 盒(32)</div>
+      <div class='f-arrow'>-></div>
+      <div class='f-box'>P 置换(32)</div>
+    </div>
+    <div class='kv'><span>子密钥 K1</span><code>F096E633A04C</code></div><div class='kv'><span>L15</span><code>01100111 01101110 10111010 11111110</code></div><div class='kv'><span>R15</span><code>00000000 00000011 00000001 11111111</code></div><div class='kv'><span>f(R,K)=P 输出</span><code>01100100 01101110 01000101 11111100</code></div><div class='kv'><span>L16</span><code>00000000 00000011 00000001 11111111</code></div><div class='kv'><span>R16</span><code>00000011 00000000 11111111 00000010</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>解密块 3 - 输出阶段</h2>
+      <p class='slide-subtitle'>本页对应模块：交换 + PI</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module active'>交换 + PI</div><div class='module'>输出</div></div>
+      <div class='kv'><span>交换后(PI 前)</span><code>00000011 00000000 11111111 00000010 00000000 00000011 00000001 11111111</code></div><div class='kv'><span>块输出(HEX)</span><code>6E67060606060606</code></div>
+      </div>
+    </section>
+    
+
+    <section class='slide'>
+      <div class='card'>
+      <h2>最终验证</h2>
+      <p class='slide-subtitle'>本页对应模块：输出</p>
+      <div class='framework'><div class='module'>输入/填充</div><div class='module'>初始置换 IP</div><div class='module'>子密钥生成 PC1/PC2</div><div class='module'>扩展置换 E</div><div class='module'>与子密钥 XOR</div><div class='module'>S 盒替换</div><div class='module'>P 盒置换</div><div class='module'>Feistel 更新</div><div class='module'>交换 + PI</div><div class='module active'>输出</div></div>
+      <div class='kv'><span>原始明文</span><code>&#x27;19230323wentaowang&#x27;</code></div><div class='kv'><span>解密明文</span><code>&#x27;19230323wentaowang&#x27;</code></div><div class='kv'><span>一致性</span><code>YES</code></div>
+      </div>
+    </section>
+    </main>
+  <script>
+  const deck = document.getElementById('deck');
+  const slides = Array.from(document.querySelectorAll('.slide'));
+  const counter = document.getElementById('counter');
+  function currentIndex() {
+    let idx = 0, best = Infinity;
+    slides.forEach((s, i) => {
+    const d = Math.abs(s.getBoundingClientRect().top);
+    if (d < best) { best = d; idx = i; }
+    });
+    return idx;
+  }
+  function updateCounter() {
+    counter.textContent = `${currentIndex() + 1} / 110`;
+  }
+  function go(delta) {
+    const i = currentIndex();
+    const n = Math.max(0, Math.min(slides.length - 1, i + delta));
+    slides[n].scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  deck.addEventListener('scroll', updateCounter, { passive: true });
+  window.addEventListener('keydown', (e) => {
+    if (['ArrowDown', 'PageDown', ' ', 'Enter'].includes(e.key)) { e.preventDefault(); go(1); }
+    if (['ArrowUp', 'PageUp', 'Backspace'].includes(e.key)) { e.preventDefault(); go(-1); }
+  });
+  updateCounter();
+  </script>
+</body>
+</html>

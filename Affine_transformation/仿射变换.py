@@ -1,5 +1,50 @@
+from math import gcd
+
+
+def _validate_keys(a, b):
+    """验证仿射密码的密钥a和b是否合法"""
+    if not isinstance(a, int) or not isinstance(b, int):
+        raise TypeError("密钥a和b必须为整数。")
+    if gcd(a, 26) != 1:
+        raise ValueError(
+            f"密钥a={a}与26不互质(gcd={gcd(a, 26)})，"
+            f"a必须与26互质才能保证加解密的唯一性。"
+            f"有效的a值为: 1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25"
+        )
+
+
+def _validate_text(text, param_name):
+    """验证输入文本是否合法"""
+    if not isinstance(text, str):
+        raise TypeError(f"{param_name}必须为字符串，但收到了{type(text).__name__}类型。")
+    if len(text) == 0:
+        raise ValueError(f"{param_name}不能为空字符串。")
+    if not any(ch.isalpha() for ch in text):
+        raise ValueError(
+            f"{param_name}中必须包含至少一个英文字母，"
+            f"但'{text}'中没有找到任何字母。"
+        )
+
+
 def affine_encrypt(plaintext, a, b):
-    """仿射加密函数"""
+    """仿射加密函数
+
+    参数:
+        plaintext: 待加密的明文字符串，必须包含至少一个英文字母。
+                   非字母字符将保持不变。
+        a: 密钥a，必须为与26互质的正整数。
+        b: 密钥b，必须为整数。
+
+    返回:
+        加密后的密文字符串（全部小写）。
+
+    异常:
+        TypeError: 当参数类型不正确时抛出。
+        ValueError: 当密钥无效或明文不包含字母时抛出。
+    """
+    _validate_text(plaintext, "明文")
+    _validate_keys(a, b)
+
     ciphertext = ''
     for ch in plaintext:
         if ch.isalpha():
@@ -11,16 +56,31 @@ def affine_encrypt(plaintext, a, b):
     return ciphertext
 
 def affine_decrypt(ciphertext, a, b):
-    """仿射解密函数"""
+    """仿射解密函数
+
+    参数:
+        ciphertext: 待解密的密文字符串，必须包含至少一个英文字母。
+                    非字母字符将保持不变。
+        a: 密钥a，必须为与26互质的正整数。
+        b: 密钥b，必须为整数。
+
+    返回:
+        解密后的明文字符串（全部小写）。
+
+    异常:
+        TypeError: 当参数类型不正确时抛出。
+        ValueError: 当密钥无效或密文不包含字母时抛出。
+    """
+    _validate_text(ciphertext, "密文")
+    _validate_keys(a, b)
+
     # 求a的模26逆元
     a_inv = None
     for i in range(26):
         if (a * i) % 26 == 1:
             a_inv = i
             break
-    if a_inv is None:
-        return None  # a没有逆元，无法解密
-    
+
     plaintext = ''
     for ch in ciphertext:
         if ch.isalpha():
@@ -53,7 +113,6 @@ def find_keys(known_plain, known_cipher):
     # 两式相减：(a*(p1-p2)) ≡ (c1-c2) (mod 26)
     for a in range(1, 26):
         # 检查a是否与26互质
-        from math import gcd
         if gcd(a, 26) != 1:
             continue
             

@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RSA 加密解密可视化</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <p class="badge">Cryptography Lab</p>
+        <h1>RSA 加密与解密动态可视化</h1>
+        <p class="subtitle">
+          演示密钥生成、明文加密、密文解密全过程。默认明文已包含学号和姓名。
+        </p>
+      </header>
+
+      <section class="panel key-panel">
+        <h2>1) 密钥生成</h2>
+        <div class="form-grid">
+          <label>
+            质数 p
+            <input id="pInput" type="number" value="3557" min="3" />
+          </label>
+          <label>
+            质数 q
+            <input id="qInput" type="number" value="2579" min="3" />
+          </label>
+          <label>
+            公钥指数 e
+            <input id="eInput" type="number" value="65537" min="3" />
+          </label>
+        </div>
+        <button id="genBtn">生成 RSA 密钥</button>
+        <pre id="keyOutput" class="output"></pre>
+      </section>
+
+      <section class="panel action-panel">
+        <h2>2) 加密与解密</h2>
+        <label>
+          明文
+          <textarea id="plainInput" rows="3">19230323WentaoWang</textarea>
+        </label>
+        <div class="btn-row">
+          <button id="encryptBtn">执行加密</button>
+          <button id="decryptBtn">执行解密</button>
+        </div>
+        <pre id="cipherOutput" class="output"></pre>
+        <pre id="decryptOutput" class="output"></pre>
+      </section>
+
+      <section class="panel timeline-panel">
+        <h2>3) 流程时间线</h2>
+        <ol id="timeline" class="timeline"></ol>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
